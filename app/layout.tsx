@@ -4,6 +4,7 @@ import "@/assets/styles/globals.css";
 import { APP_DESCRIPTION, APP_NAME, SERVER_URL } from "@/lib/constants";
 const inter = Inter({ subsets: ["latin"] });
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 export const metadata: Metadata = {
   title: {
     template: `%s | Prostore`,
@@ -29,6 +30,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

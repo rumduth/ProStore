@@ -13,3 +13,10 @@ export const signInDefaultValues = {
   email: process.env.DEFAULT_TEST_EMAIL,
   password: process.env.DEFAULT_TEST_PASSWORD,
 };
+
+export const signUpDefaultValues = {
+  password: process.env.DEFAULT_TEST_PASSWORD,
+  confirmPassword: process.env.DEFAULT_TEST_PASSWORD,
+  name: process.env.DEFAULT_TEST_NAME,
+  email: process.env.DEFAULT_TEST_EMAIL,
+};

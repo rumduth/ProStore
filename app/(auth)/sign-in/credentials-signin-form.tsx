@@ -18,7 +18,7 @@ export default function CredentialsSignInForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   return (
     <form className="space-y-6" action={action}>
-      <input type="text" hidden value={callbackUrl} name="callbackUrl" />
+      <input type="hidden" value={callbackUrl} name="callbackUrl" />
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
