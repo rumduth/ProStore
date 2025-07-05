@@ -4,6 +4,7 @@ import { prisma } from "./prisma/prisma";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcrypt-ts-edge";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   pages: {
@@ -51,6 +52,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     authorized: async ({ request, auth }: any) => {
+      // Array of regex patterns of paths we want to protect
+      const protectedPath = [
+        /\/shipping-address/,
+        /\/payment-method/,
+        /\/place-order/,
+        /\/profile/,
+        /\/user\/(.*)/,
+        /\/order\/(.*)/,
+        /\/admin/,
+      ];
+      //Get pathname from request url
+
+      const { pathname } = request.nextUrl;
+      //Check if use is not authenticated ans assessing a protected route
+      if (!auth && protectedPath.some((p) => p.test(pathname))) return false;
+
       //Checl for session cart cookie
       if (!request.cookies.get("sessionCartId")) {
         //Generate new session Cart Id cookie
@@ -71,8 +88,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       } else return true;
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user }: any) {
+    async jwt({ session, token, user, trigger }: any) {
       if (user) {
+        token.id = user.id;
         token.role = user.role;
         //If use has no name, then use the email
         if (user.name === "NO_NAME") {
@@ -86,7 +104,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
           data: { name: token.name },
         });
+
+        if (trigger === "signIn" || trigger === "signUp") {
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+          if (sessionCartId) {
+            const sessionCart = await prisma.cart.findFirst({
+              where: { sessionCartId },
+            });
+            if (sessionCart) {
+              //Delete current user cart
+              await prisma.cart.deleteMany({ where: { userId: user.id } });
+
+              //Assign new cart
+              await prisma.cart.update({
+                where: { id: sessionCart.id },
+                data: { userId: user.id },
+              });
+            }
+          }
+        }
       }
+
+      //Handle session updates
+      if (session?.user?.name && trigger === "update") {
+        token.name = session.user.name;
+      }
+
       return token;
     },
 

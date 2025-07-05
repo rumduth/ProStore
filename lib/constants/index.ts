@@ -20,3 +20,19 @@ export const signUpDefaultValues = {
   name: process.env.DEFAULT_TEST_NAME,
   email: process.env.DEFAULT_TEST_EMAIL,
 };
+
+export const shippingAddressDefault = {
+  fullName: "",
+  streetAddress: "",
+  city: "",
+  postalCode: "",
+  country: "",
+};
+
+export const PAYMENT_METHOD = process.env.PAYMENT_METHODS
+  ? process.env.PAYMENT_METHODS.split(", ")
+  : ["PayPal", "Stripe", "CashOnDelivery"];
+export const DEFAULT_PAYMENT_METHOD =
+  process.env.DEFAULT_PAYMENT_METHOD || "PayPal";
+
+export const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
