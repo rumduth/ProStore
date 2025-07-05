@@ -18,7 +18,7 @@ export function formatNumberWithDecimal(num: number): string {
 
 //Format errors
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function formatErrors(error: any) {
+export function formatErrors(error: any) {
   if (error.name === "ZodError") {
     const fieldsErrors = error.issues.map(
       (field: { message: string }) => field.message
@@ -125,4 +125,10 @@ export function formUrlQuery({
     },
     { skipNull: true }
   );
+}
+
+// Format Number
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
+export function formatNumber(number: number) {
+  return NUMBER_FORMATTER.format(number);
 }

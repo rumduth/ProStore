@@ -60,7 +60,13 @@ export default async function UserButton() {
               Order History
             </Link>
           </DropdownMenuItem>
-
+          {session?.user?.role === "admin" && (
+            <DropdownMenuItem>
+              <Link href="/admin/overview" className="w-full">
+                Admin
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem className="w-full">
             <Button
               className="w-full py-2 h-2 justify-start cursor-pointer pl-0 "

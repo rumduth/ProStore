@@ -1,7 +1,6 @@
+import { requireAdmin } from "@/lib/auth-guard";
+import { deleteOrder, getAllOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
-import { getMyOrders } from "@/lib/actions/order.actions";
-import { formatCurrency, formatDateTime, formatId } from "@/lib/utils";
-import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -10,19 +9,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCurrency, formatDateTime, formatId } from "@/lib/utils";
+import Link from "next/link";
 import Pagination from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
-
+import DeleteDialog from "@/components/shared/delete-dialog";
 export const metadata: Metadata = {
-  title: "Orders",
+  title: "Admin Orders",
 };
-
-export default async function OrdersPage(props: {
+export default async function AdminOrdersPage(props: {
   searchParams: Promise<{ page: string }>;
 }) {
-  const { page } = await props.searchParams;
-  const orders = await getMyOrders({ page: Number(page) || 1 });
-
+  await requireAdmin();
+  const { page = "1" } = await props.searchParams;
+  const orders = await getAllOrders({ page: Number(page) });
   return (
     <>
       <div className="space-y-2">
@@ -58,11 +58,10 @@ export default async function OrdersPage(props: {
                       : "Not Delivered"}
                   </TableCell>
                   <TableCell>
-                    <Button asChild>
-                      <Link href={`/order/${order.id}`}>
-                        <span className="px-2">Detail</span>
-                      </Link>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/order/${order.id}`}>Detail</Link>
                     </Button>
+                    <DeleteDialog id={order.id} action={deleteOrder} />
                   </TableCell>
                 </TableRow>
               ))}
