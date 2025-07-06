@@ -320,11 +320,28 @@ export async function getOrderSummary() {
 export async function getAllOrders({
   limit = PAGE_SIZE,
   page,
+  query,
 }: {
   limit?: number;
   page: number;
+  query: string;
 }) {
+  const queryFilter: Prisma.OrderWhereInput =
+    query && query !== "all"
+      ? {
+          user: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            } as Prisma.StringFilter,
+          },
+        }
+      : {};
+
   const data = await prisma.order.findMany({
+    where: {
+      ...queryFilter,
+    },
     orderBy: { createdAt: "desc" },
     take: limit,
     skip: (page - 1) * limit,
@@ -359,9 +376,9 @@ export async function updateOrderToPaidCOD(orderId: string) {
 //Update COD order to delivered
 export async function deliverOrder(orderId: string) {
   try {
-    const order = await prisma.order.findFirst({where: {id: orderId}});
-    if(!order) throw new Error("Order not found");
-    if(!order.isPaid) throw new Error("Order is not paid");
+    const order = await prisma.order.findFirst({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
+    if (!order.isPaid) throw new Error("Order is not paid");
 
     await prisma.order.update({
       where: { id: orderId },
