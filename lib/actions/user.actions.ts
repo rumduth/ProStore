@@ -10,13 +10,13 @@ import {
 import { auth, signIn, signOut } from "@/auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/prisma/prisma";
-import { hashSync } from "bcrypt-ts-edge";
 import { formatErrors } from "../utils";
 import { ShippingAddress } from "@/types";
 import { z } from "zod/v4";
 import { PAGE_SIZE } from "../constants";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "../generated/prisma";
+import { hash } from "../encrypt";
 // Sign in the user with credentials
 export async function signInWithCredentials(
   prevState: unknown,
@@ -55,7 +55,7 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       email: formData.get("email"),
     });
     const plainPassword = user.password;
-    user.password = hashSync(user.password, 10);
+    user.password = await hash(user.password);
 
     await prisma.user.create({
       data: { name: user.name, email: user.email, password: user.password },
