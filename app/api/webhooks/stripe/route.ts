@@ -2,30 +2,54 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { updateOrderToPaid } from "@/lib/actions/order.actions";
 
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: "2025-06-30.basil", // Use the latest API version
+});
+
 export async function POST(req: NextRequest) {
-  //Build the web hook event
-  const event = await Stripe.webhooks.constructEvent(
-    await req.text(),
-    req.headers.get("stripe-signature") as string,
-    process.env.STRIPE_WEBHOOK_SECRET as string
-  );
+  try {
+    // Build the webhook event
+    const body = await req.text();
+    const signature = req.headers.get("stripe-signature") as string;
 
-  //Check for sucessful payment
-  if (event.type === "charge.succeeded") {
-    const { object } = event.data;
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET as string
+    );
 
-    //Update order status
-    await updateOrderToPaid({
-      orderId: object.metadata.orderId,
-      paymentResult: {
-        id: object.id,
-        status: "COMPLETED",
-        email_address: object.billing_details.email!,
-        pricePaid: (object.amount / 100).toFixed(),
-      },
+    // Check for successful payment
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+      // Update order status
+      await updateOrderToPaid({
+        orderId: paymentIntent.metadata.orderId,
+        paymentResult: {
+          id: paymentIntent.id,
+          status: "COMPLETED",
+          email_address: paymentIntent.receipt_email || "",
+          pricePaid: (paymentIntent.amount / 100).toFixed(2),
+        },
+      });
+
+      return NextResponse.json({
+        message: "updateOrderToPaid was successful",
+        received: true,
+      });
+    }
+
+    // Return success for unhandled events (important for Stripe)
+    return NextResponse.json({
+      message: `Unhandled event type: ${event.type}`,
+      received: true,
     });
-    return NextResponse.json({ message: "updateOrderToPaid was succesful" });
+  } catch (error) {
+    console.error("Stripe webhook error:", error);
+    return NextResponse.json(
+      { error: "Webhook handler failed" },
+      { status: 400 }
+    );
   }
-
-  return NextResponse.json({ message: "event is not charge.succeeded" });
 }
