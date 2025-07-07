@@ -49,6 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorized: async ({ request, auth }: any) => {
       // Array of regex patterns of paths we want to protect
       const protectedPath = [
