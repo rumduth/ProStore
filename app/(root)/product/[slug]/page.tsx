@@ -6,15 +6,21 @@ import { getProductBySlug } from "@/lib/actions/product.actions";
 import { notFound } from "next/navigation";
 import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCart } from "@/lib/actions/cart.actions";
-
+import ReviewsList from "./review-list";
+import { auth } from "@/auth";
+import { getReviewByProductId, getReviews } from "@/lib/actions/review.actions";
+import Rating from "@/components/shared/rating";
 export default async function ProductDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
   const product = await getProductBySlug(slug);
   if (!product) notFound();
-
+  const session = await auth();
+  const userId = session?.user?.id;
   const cart = await getMyCart();
+  const reviews = await getReviews({ productId: product.id });
+  const userReview = await getReviewByProductId({ productId: product.id });
   return (
     <>
       <section>
@@ -28,8 +34,14 @@ export default async function ProductDetailPage(props: {
                 {product.brand} {product.category}
               </p>
               <h1 className="h3-bold">{product.name}</h1>
+              <Rating value={Number(product.rating)} />
               <p>
-                {product.rating} of {product.numReviews} Reviews
+                {product.numReviews}{" "}
+                {product.numReviews === 0
+                  ? "Be the first review?"
+                  : product.numReviews >= 2
+                  ? "reviews"
+                  : "review"}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <ProductPrice
@@ -80,6 +92,17 @@ export default async function ProductDetailPage(props: {
             </Card>
           </div>
         </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="h2-bold">Customer Reviews</h2>
+        <ReviewsList
+          userId={userId || ""}
+          productId={product.id}
+          productSlug={product.slug}
+          reviews={reviews}
+          userReview={userReview}
+        />
       </section>
     </>
   );
