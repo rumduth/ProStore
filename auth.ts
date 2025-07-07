@@ -1,12 +1,10 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma/prisma";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcrypt-ts-edge";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
