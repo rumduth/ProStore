@@ -17,6 +17,7 @@ import { PAGE_SIZE } from "../constants";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "../generated/prisma";
 import { hash } from "../encrypt";
+import { getMyCart } from "./cart.actions";
 // Sign in the user with credentials
 export async function signInWithCredentials(
   prevState: unknown,
@@ -42,6 +43,8 @@ export async function signInWithCredentials(
 
 // Sign user out
 export async function signOutUser() {
+  const currentCart = await getMyCart();
+  await prisma.cart.delete({ where: { id: currentCart?.id } });
   await signOut();
 }
 
@@ -67,7 +70,6 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       message: "User registered succesfully",
     };
   } catch (error) {
-    console.log(error);
     if (isRedirectError(error)) throw error;
     return {
       success: false,

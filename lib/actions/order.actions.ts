@@ -191,7 +191,7 @@ export async function approvePayPalOrder(
 }
 
 // Update order to pay
-async function updateOrderToPaid({
+export async function updateOrderToPaid({
   orderId,
   paymentResult,
 }: {
