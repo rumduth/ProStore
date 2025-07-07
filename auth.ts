@@ -1,16 +1,17 @@
 import NextAuth from "next-auth";
 import { prisma } from "./prisma/prisma";
 import Credentials from "next-auth/providers/credentials";
-import { NextResponse } from "next/server";
 import { compare } from "./lib/encrypt";
 import { cookies } from "next/headers";
+import { authConfig } from "./auth.config";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60,
   },
   providers: [
@@ -49,43 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    authorized: async ({ request, auth }: any) => {
-      // Array of regex patterns of paths we want to protect
-      const protectedPath = [
-        /\/shipping-address/,
-        /\/payment-method/,
-        /\/place-order/,
-        /\/profile/,
-        /\/user\/(.*)/,
-        /\/order\/(.*)/,
-        /\/admin/,
-      ];
-      //Get pathname from request url
-
-      const { pathname } = request.nextUrl;
-      //Check if use is not authenticated ans assessing a protected route
-      if (!auth && protectedPath.some((p) => p.test(pathname))) return false;
-
-      //Checl for session cart cookie
-      if (!request.cookies.get("sessionCartId")) {
-        //Generate new session Cart Id cookie
-        const sessionCartId = crypto.randomUUID();
-        //clone the req headers
-        // const newRequestHeaders = new Headers(request.headers);
-
-        //Create new response and add the new headers
-        // const response = NextResponse.next({
-        //   request: {
-        //     headers: newRequestHeaders,
-        //   },
-        // });
-        const response = NextResponse.next();
-        //set newly generated sessionCartId
-        response.cookies.set("sessionCartId", sessionCartId);
-        return response;
-      } else return true;
-    },
+    ...authConfig.callbacks,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ session, token, user, trigger }: any) {
       if (user) {
